@@ -1,0 +1,335 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>omeuscroll com rss</title>
+
+<script type="text/javascript" src="jquery-1.6.2.min.js"></script>
+
+
+<!-- rss -->
+<script type="text/javascript">
+var contador = 1;
+var totalWidth = 0;
+(function($){$.fn.FeedEk=function(opt){var def={FeedUrl:'',MaxCount:10,ShowDesc:false,ShowPubDate:false};
+if(opt){$.extend(def,opt)}var idd=$(this).attr('id');if(def.FeedUrl==null||def.FeedUrl==''){$('#'+idd).empty();return}
+var pubdt;$('#'+idd).empty().append('<div style="text-align:left; padding:3px;"></div>');
+$.ajax({url:'http://ajax.googleapis.com/ajax/services/feed/load?v=1.0&num='+def.MaxCount+'&output=json&q='+encodeURIComponent(def.FeedUrl)+'&callback=?',dataType:'json',success:function(data){
+  $('#'+idd).empty();
+	$.each(data.responseData.feed.entries,function(i,entry){
+		$('#'+idd).append('<li class="ItemTitle" id="teste'+contador+'"><a href="'+entry.link+'" target="_blank" >'+entry.title+':'+entry.content.replace(/<\/?[^>]+>/gi, '')+'</a></li>');
+
+		totalWidth += $("#teste"+contador).outerWidth();	
+	//	alert(totalWidth);
+							contador++
+})
+totalWidth   = totalWidth +(contador*600);
+//alert(" total "+totalWidth);
+$(".liScrollExample").liScroll({showControls:false});
+}})}})(jQuery);
+</script>
+<!-- fim da rss -->
+
+<script type="text/javascript" >
+$(document).ready(function(){
+  
+  
+   $('#divRss').FeedEk({
+   FeedUrl : 'http://feeds.jn.pt/JN-Destaques',
+   MaxCount : 10,
+   ShowDesc : false,
+   ShowPubDate: false
+  });
+  
+});
+
+function OpenBox()
+{
+$('#divSrc').toggle();
+}
+function changeFeedUrl()
+{
+
+
+var showDescription=new Boolean();
+showDescription=true;
+
+if($('#txtCount').val()!="") cnt=parseInt($('#txtCount').val());
+if (! $('#chkDate').attr('checked')) showDate=false;
+if (! $('#chkDesc').attr('checked')) showDescription=false;
+
+ $('#divRss').FeedEk({
+   FeedUrl : $('#txtUrl').val(),
+   MaxCount : cnt,
+   ShowDesc : showDescription,
+   ShowPubDate: showDate
+  });
+}
+</script>
+
+<!-- scroller -->
+<script type="text/javascript">
+
+	(function($){	
+
+		jQuery.fn.liScroll = function(settings) {
+
+			settings = $.extend({
+		        travelocity: 0.07,
+		        showControls: false
+		    }, settings);
+
+		    return this.each(function() {
+		        var strip = this,
+		        	$strip = $(strip);
+
+		        $strip.addClass("liScroll-ticker")
+		        $stripItems = $strip.find("ul");
+				
+		        var stripWidth = 0,
+					$mask = $strip.wrap("<div class='liScroll-mask'></div>"),
+					$tickercontainer = $strip.parent().wrap("<div class='liScroll-container'></div>").parent(),
+					paused = false,
+					containerWidth = $strip.parent().parent().width(); //a.k.a. 'mask' width
+
+		        var currentItemIndex = function() {
+		            var index = 0,
+						currentLeft = parseInt($strip.css("left")),
+						accumulatedWidth = 0;
+
+		            if (currentLeft > 0) {
+		                return 0;
+		            } else {
+		                $strip.find("ul").each(function(i) {
+		                    if (currentLeft == (0 - accumulatedWidth)) {
+		                        index = i;
+		                        return false;
+		                    }
+		                    accumulatedWidth += $(this).width();
+		                    if (currentLeft > (0 - accumulatedWidth)) {
+		                        index = i;
+		                        return false;
+		                    }
+		                    return true;
+		                });
+
+		            }
+						
+		            return index;
+		        };
+		        var next = function() {
+		            pause();
+		            var index = currentItemIndex();
+		            if (index >= $stripItems.length - 1) {
+		                $strip.css("left", "0px");
+		            } else {
+		                var $itm = $stripItems.eq(index + 1);
+		                $strip.css("left", (0 - $itm.position().left) + "px");
+		            }
+		        };
+		        var pause = function() {
+		            $strip.stop();
+		            $tickercontainer
+		                .removeClass("starterr")
+		                .addClass("liScroll-paused");
+		            paused = true;
+		        };
+		        var previous = function() {
+		            pause();
+		            var index = currentItemIndex(), 
+						$itm = null;
+
+		            if (index == 0) {
+		                $itm = $stripItems.eq($stripItems.length - 1);
+		            } else {
+		                $itm = $stripItems.eq(index - 1);
+		            }
+		            $strip.css("left", (0 - $itm.position().left) + "px");
+		        };
+		        var play = function() {
+		            var offset = $strip.offset(),
+						residualSpace = offset.left + stripWidth,
+						residualTime = residualSpace / settings.travelocity;
+
+		            scrollnews(residualSpace, residualTime);
+		            $tickercontainer
+		                .addClass("starterr")
+		                .removeClass("liScroll-paused");
+		            paused = false;
+		
+		        };
+		        var togglePlay = function() {
+		            if (paused) {
+		                play();
+		            } else {
+		                pause();
+		            }
+		        };
+
+
+
+				// calculate full width
+				//alert(totalWidth)
+				$strip.width(totalWidth);
+							
+		        $stripItems.each(function(i) {
+		            stripWidth += $(this).outerWidth();
+		        });
+		        $strip.width(stripWidth);
+
+		        var totalTravel = stripWidth + containerWidth,
+					defTiming = totalTravel / settings.travelocity;		
+
+		        function scrollnews(spazio, tempo) {
+		            $strip.animate(
+						{ left: '-=' + spazio }, 
+						tempo, 
+						"linear", 
+						function() { 
+							$strip.css("left", containerWidth); 
+							scrollnews(totalTravel, defTiming); 
+						}
+					);
+					
+		        }
+		        scrollnews(totalTravel, defTiming);
+		        $tickercontainer.addClass("starterr");
+		        $strip.hover(play, play);
+		    });
+		};
+	})(jQuery);
+	</script>
+	<script type="text/javascript">
+		$().ready(function(){
+			//$(".liScrollExample").liScroll({showControls:false});
+		});
+
+	</script>
+<!-- fim do scroller -->
+
+
+
+
+<style>
+body{
+background-color:#FFF; 
+font:13px tahoma,Geneva,sans-serif; 
+
+}
+
+#divRss {
+    padding: 0px 3px 3px 5px;
+	background-color:#FFF;
+ list-style-type: none;
+
+	margin-top:3px;
+	width:100%;
+
+}
+
+.ItemTitle{
+ 
+	list-style-type: none;
+		display: inline;
+float:left;
+ margin:5px 40px 0px 40px;
+ padding-top:3px;
+ 
+}
+
+.ItemContent{
+	
+ padding:1px 3px 3px 3px;
+ 
+ color:#3E3E3E;
+}
+.ItemDate{
+font-size:11px;
+color:#AAA;
+}
+
+.liScroll-container { 
+    border: 1px solid #ccc;
+    background: #fff; 
+    height: 25px; 
+    margin: 0 0 15px; 
+    padding: 2px 5px 2px 5px;
+	position: relative;
+overflow: hidden;
+}
+.liScroll-container .liScroll-mask {
+    position: relative;
+    overflow: hidden;
+}
+    .liScroll-ticker {
+        position: relative;
+        left: 300px;
+        list-style: none;
+        list-style-image: none;
+        margin: 0;
+        padding: 0;
+    }
+        .liScroll-ticker ul {
+            list-style: none;
+            list-style-image: none;
+            margin: 0;
+            padding: 0;            
+        }
+        .liScroll-ticker li {
+            float: left;
+            list-style: none;
+            list-style-image: none;
+            margin: 0;
+            padding: 0;
+            background: #fff;
+        }
+            .liScroll-ticker a {
+                color: #000;
+                white-space: nowrap;
+                padding: 0;
+                margin: 0 50px 0 0;
+                text-decoration: none;
+            } 
+                .liScroll-ticker a:hover {
+                    text-decoration: underline;
+                }
+            .liScroll-ticker span {
+                margin: 0 10px 0 0;
+            } 
+
+    
+    .liScroll-container .liScroll-prev {
+        right: 55px;
+        width: 25px;
+    }
+    .liScroll-container .liScroll-play {
+        background-position: -25px -24px;
+        right: 25px;
+        width: 25px;
+    }
+    .starterr .liScroll-play {
+        background-position: -25px 2px;
+    }
+    .liScroll-container .liScroll-next {
+        background-position: -100px 2px;
+        right: 0px;
+        width: 25px;
+    }
+
+#divSrc
+{
+color:#888888;
+font-size:11px;
+width:460px;
+}
+</style>
+</head>
+<body>
+	<div class="liScrollExample">
+		<ul id="divRss">
+		<li></li>
+<!-- <ul id="divRss" class="liScrollExample"></ul> -->
+</ul>
+</div>
+</body>
+
+</html>
